@@ -18,6 +18,7 @@
     "@0xsquid/squid-types": "^0.1.116",
     "@1inch/cross-chain-sdk": "^0.1.8",
     "@bnb-chain/greenfield-js-sdk": "^2.2.0",
+    "@cowprotocol/cow-sdk": "^5.8.0-RC.0",
     "@pancakeswap/sdk": "5",
     "@pancakeswap/smart-router": "5",
     "@pancakeswap/tokens": "^0.6.28",
