@@ -5,14 +5,18 @@ export interface NavItem {
   external?: boolean
 }
 
-export type BlockType = {
+export type BlockType {
   id: number
   action: string
-  fromToken: string
-  toToken: string
-  amount: string
-  amountout?: number | string
+  fromToken?: string
+  toToken?: string
+  amount?: string
   exchangeName?: string
+  amountout?: number
+  destinationChainSelector?: string
+  message?: string
+  fromChain?: number
+  toChain?: number
 }
 
 export type BlockContextType = {

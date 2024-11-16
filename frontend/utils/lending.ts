@@ -8,7 +8,7 @@ const LENDING_ABI = [
 ]
 
 export const encodeLendingData = (block: SquidBlockData): string => {
-  const iface = new ethers.Interface(LENDING_ABI)
+  const iface = new ethers.utils.Interface(LENDING_ABI)
   
   // Both Aave and Radiant use similar function signatures but different function names
   const functionName = block.protocol === 'aave' ? 'supply' : 'deposit'

@@ -100,7 +100,7 @@ export function useExchanges(fromTokenName: string, toTokenName: string) {
               console.log(
                 "price",
                 Number(
-                  ethers.formatUnits(
+                  ethers.utils.formatUnits(
                     tradeRoute.outputAmount.quotient.toString(),
                     decimals
                   )
@@ -109,7 +109,7 @@ export function useExchanges(fromTokenName: string, toTokenName: string) {
               return {
                 exchange: e.name,
                 price: Number(
-                  ethers.formatUnits(
+                  ethers.utils.formatUnits(
                     tradeRoute.outputAmount.quotient.toString(),
                     decimals
                   )
@@ -124,7 +124,7 @@ export function useExchanges(fromTokenName: string, toTokenName: string) {
               console.log(`${e.name} returned:`, amount)
               return {
                 exchange: e.name,
-                price: Number(ethers.formatUnits(amount[1], decimals)),
+                price: Number(ethers.utils.formatUnits(amount[1], decimals)),
               }
             } else {
               console.log("i m uniswap v3")
@@ -157,7 +157,7 @@ export function useExchanges(fromTokenName: string, toTokenName: string) {
               console.log("amount", amount)
               return {
                 exchange: e.name,
-                price: Number(ethers.formatUnits(amount, decimals)),
+                price: Number(ethers.utils.formatUnits(amount, decimals)),
               }
             }
           } catch (err) {

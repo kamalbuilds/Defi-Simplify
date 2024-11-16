@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ethers } from 'ethers';
+import { ethers6Adapter } from 'thirdweb/dist/types/adapters/ethers6';
 
 export const getSquidRoute = async (params: any) => {
     const result = await axios.post(
@@ -18,7 +19,7 @@ export const getSquidRoute = async (params: any) => {
 export const executeSquidTransaction = async (route: any, account: any) => {
     const ethersSigner = await ethers6Adapter.signer.toEthers({
         client,
-        chain: sourceChain === 'opbnb' ? opbnb : bsc,
+        chain: sourceChain === 'opbnb' ? 'opbnb' : 'bsc',
         account: account,
     });
 

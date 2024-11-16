@@ -8,6 +8,7 @@ import OneInchBlock from "./1inchBlock"
 import SquidBlock from "./SquidBlock"
 import { RemoveLiquidityBlock } from "./removeliquidityblock"
 import CowSwapBlock from "./CowSwapBlock"
+import CCIPBlock from "./CCIPBlock"
 
 export const BlockContext = React.createContext<BlockContextType | undefined>(
   undefined
@@ -32,7 +33,7 @@ const BlockComponent: FC<BlockContextType> = ({
       {block.action === "1inch Cross Chain Swap" && <OneInchBlock />}
       {block.action === "Remove Liquidity" && <RemoveLiquidityBlock />}
       {block.action === "CoW Swap" && <CowSwapBlock />}
-  
+      {block.action === "CCIP Transfer" && <CCIPBlock />}
     </BlockContext.Provider>
   )
 }

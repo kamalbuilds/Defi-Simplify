@@ -36,10 +36,11 @@ import { useRouter } from "next/navigation"
 import { OrderBookApi, OrderQuoteSideKindSell, OrderSigningUtils } from "@cowprotocol/cow-sdk"
 import { cowTokens } from "@/lib/cowtokens"
 import { ethers } from "ethers"
-import { ethers6Adapter } from "thirdweb/adapters/ethers6"
+import { ethers6Adapter  } from "thirdweb/adapters/ethers6"
 import { client } from "@/components/client"
+import { useCCIP } from "@/hooks/use-ccip"
 
-const defiActions = ["Swap", "Add Liquidity", "Remove Liquidity", "1inch Cross Chain Swap", "Squid Router", "CoW Swap"]
+const defiActions = ["Swap", "Add Liquidity", "Remove Liquidity", "1inch Cross Chain Swap", "Squid Router", "CoW Swap", "CCIP Transfer"]
 
 const BlockContext = createContext<
   | {
@@ -72,7 +73,7 @@ export default function BatchComponent() {
         return "BSC Mainnet"
         break
       default:
-        return "BSC Mainnett"
+        return "BSC Mainnet"
         break
     }
   }, [chainId]);
@@ -81,6 +82,8 @@ export default function BatchComponent() {
   const [fromToken, setFromToken] = useState<string>("")
   const [toToken, setToToken] = useState<string>("")
 
+
+  const { sendMessage } = useCCIP();
   // Update the currentNet effect to set fromToken and toToken
   useEffect(() => {
     if (currentNet === "Ethereum Mainnet") {
@@ -266,11 +269,14 @@ export default function BatchComponent() {
 
               const { quote } = await orderBookApi.getQuote(quoteRequest)
               
+              console.log("Quote from CoW Swap>>>", quote)
               const ethersSigner = await ethers6Adapter.signer.toEthers({
                 client: client,
                 chain: activeWalletChain!,
                 account: activeAccount,
               })
+
+
 
               const orderSigningResult = await OrderSigningUtils.signOrder(
                 quote,
@@ -284,6 +290,25 @@ export default function BatchComponent() {
               })
 
               break;
+
+              case "CCIP Transfer":
+                  if (!block.destinationChainSelector || !block.fromToken || !block.amount) {
+                    throw new Error(`Invalid CCIP parameters in block ${block.id}`)
+                  }
+
+                  const ccipToken = tokens[currentNet].find(t => t.name === block.fromToken)
+                  if (!ccipToken) {
+                    throw new Error(`Invalid token in block ${block.id}`)
+                  }
+
+                  await sendMessage({
+                    destinationChainSelector: block.destinationChainSelector,
+                    receiver: activeAccount.address, // Sending to same address on destination chain
+                    token: ccipToken.address,
+                    amount: block.amount,
+                    message: block.message || ""
+                  })
+                  break
 
             default:
               throw new Error(`Unknown action "${block.action}" in block ${block.id}`)
