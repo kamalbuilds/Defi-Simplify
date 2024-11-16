@@ -30,7 +30,7 @@ export const CrossChainNFTPurchase = () => {
                 fromAddress: activeAccount.address,
                 fromChain: fromChainId,
                 fromToken: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // Native token
-                fromAmount: ethers.parseEther(nftPrice).toString(),
+                fromAmount: ethers.utils.parseEther(nftPrice).toString(),
                 toChain: toChainId,
                 toToken: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // ETH
                 toAddress: activeAccount.address,
@@ -40,7 +40,7 @@ export const CrossChainNFTPurchase = () => {
                     {
                         callType: 0,
                         target: SERAPH_NFT_ADDRESS,
-                        value: ethers.parseEther(nftPrice).toString(),
+                        value: ethers.utils.parseEther(nftPrice).toString(),
                         callData: encodePurchaseData(SERAPH_TOKEN_ID, nftPrice),
                         estimatedGas: '300000'
                     }

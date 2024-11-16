@@ -4,6 +4,8 @@ import { ethers } from "ethers"
 import { tokens } from "@/config/tokens"
 import { useWeb3 } from "./use-web3"
 import { exchanges } from "@/lib/helpers"
+import { getEthersSigner, getEthersProvider } from "@/config/wagmi.config"
+import { wagmiConfig } from "@/config/wagmi.config"
 
 export function useTokenSwap() {
   const { web3Data } = useWeb3()
@@ -20,13 +22,14 @@ export function useTokenSwap() {
     queryFn: async () => {
       if (!window.ethereum || !amountIn) return null
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
+      const provider = getEthersProvider(wagmiConfig)
+
       const decimals = tokens[currentNet][trade.toToken].decimals
       const _tokenIn = tokens[currentNet][trade.fromToken].address
       const _tokenOut = tokens[currentNet][trade.toToken].address
       const path = [_tokenIn, _tokenOut]
 
-      const amount_in = ethers.parseEther(amountIn)
+      const amount_in = ethers.utils.parseEther(amountIn)
 
       // Get prices from exchanges
       const prices = await Promise.all(
@@ -84,8 +87,7 @@ export function useTokenSwap() {
     mutationFn: async () => {
       if (!priceData?.bestExchange || !amountIn) throw new Error("Invalid swap parameters")
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = provider.getSigner()
+   
 
         // Reference original swap function
         ```typescript:front-end/src/components/Swap.js

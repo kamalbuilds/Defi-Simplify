@@ -37,15 +37,15 @@ export function usePancakeswapLiquidity() {
     if (!token0 || !token1) throw new Error('Tokens not found')
 
     // Convert amounts to proper decimals
-    const liquidityWei = ethers.parseUnits(liquidity, 18) // LP tokens typically have 18 decimals
-    const amountAMinWei = ethers.parseUnits(amountAMin, token0.decimals)
-    const amountBMinWei = ethers.parseUnits(amountBMin, token1.decimals)
+    const liquidityWei = ethers.utils.parseUnits(liquidity, 18) // LP tokens typically have 18 decimals
+    const amountAMinWei = ethers.utils.parseUnits(amountAMin, token0.decimals)
+    const amountBMinWei = ethers.utils.parseUnits(amountBMin, token1.decimals)
 
     // Get deadline 20 minutes from now
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20
 
     // Create contract instances
-    const provider = new ethers.BrowserProvider(window.ethereum)
+
     const ethersSigner = await ethers6Adapter.signer.toEthers({
       client,
       chain: bsc,
@@ -131,10 +131,10 @@ console.log(token0.address,
     if (!token0 || !token1) throw new Error('Tokens not found')
 
     // Convert amounts to proper decimals
-    const amountADesiredWei = ethers.parseUnits(amountADesired, token0.decimals)
-    const amountBDesiredWei = ethers.parseUnits(amountBDesired, token1.decimals)
-    const amountAMinWei = ethers.parseUnits(amountAMin, token0.decimals)
-    const amountBMinWei = ethers.parseUnits(amountBMin, token1.decimals)
+    const amountADesiredWei = ethers.utils.parseUnits(amountADesired, token0.decimals)
+    const amountBDesiredWei = ethers.utils.parseUnits(amountBDesired, token1.decimals)
+    const amountAMinWei = ethers.utils.parseUnits(amountAMin, token0.decimals)
+    const amountBMinWei = ethers.utils.parseUnits(amountBMin, token1.decimals)
 
     console.log(amountADesiredWei,"amountADesiredWei")
     console.log(amountBDesiredWei,"amountBDesiredWei")
@@ -145,7 +145,6 @@ console.log(token0.address,
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20
 
     // Create contract instance
-    const provider = new ethers.BrowserProvider(window.ethereum);
 
     const ethersSigner = await ethers6Adapter.signer.toEthers({
       client,

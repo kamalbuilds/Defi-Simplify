@@ -33,8 +33,13 @@ import { greenfieldTestnet } from "@/utils/chain.utils"
 import Spinner from "@/components/Spinner"
 import { useAccount } from "wagmi"
 import { useRouter } from "next/navigation"
+import { OrderBookApi, OrderQuoteSideKindSell, OrderSigningUtils } from "@cowprotocol/cow-sdk"
+import { cowTokens } from "@/lib/cowtokens"
+import { ethers } from "ethers"
+import { ethers6Adapter } from "thirdweb/adapters/ethers6"
+import { client } from "@/components/client"
 
-const defiActions = ["Swap", "Add Liquidity", "Remove Liquidity", "1inch Cross Chain Swap", "Squid Router"]
+const defiActions = ["Swap", "Add Liquidity", "Remove Liquidity", "1inch Cross Chain Swap", "Squid Router", "CoW Swap"]
 
 const BlockContext = createContext<
   | {
@@ -235,6 +240,50 @@ export default function BatchComponent() {
                 currentNet
               })
               break
+
+            case "CoW Swap":
+              if (!block.fromToken || !block.toToken || !block.amount) {
+                throw new Error(`Invalid CoW Swap parameters in block ${block.id}`)
+              }
+
+              const fromToken = cowTokens.find(t => t.name === block.fromToken && t.chainId === chainId)
+              const toToken = cowTokens.find(t => t.name === block.toToken && t.chainId === chainId)
+
+              if (!fromToken || !toToken) {
+                throw new Error(`Tokens not supported on CoW Swap for chain ${chainId}`)
+              }
+
+              const orderBookApi = new OrderBookApi({ chainId, env: "production" })
+              
+              const quoteRequest = {
+                sellToken: fromToken.address,
+                buyToken: toToken.address,
+                from: activeAccount.address,
+                receiver: activeAccount.address,
+                sellAmountBeforeFee: ethers.utils.parseUnits(block.amount, fromToken.decimals).toString(),
+                kind: OrderQuoteSideKindSell.SELL,
+              }
+
+              const { quote } = await orderBookApi.getQuote(quoteRequest)
+              
+              const ethersSigner = await ethers6Adapter.signer.toEthers({
+                client: client,
+                chain: activeWalletChain!,
+                account: activeAccount,
+              })
+
+              const orderSigningResult = await OrderSigningUtils.signOrder(
+                quote,
+                chainId,
+                ethersSigner
+              )
+
+              await orderBookApi.sendOrder({
+                ...orderSigningResult,
+                signature: orderSigningResult.signature,
+              })
+
+              break;
 
             default:
               throw new Error(`Unknown action "${block.action}" in block ${block.id}`)

@@ -3,6 +3,8 @@ import { ethers } from "ethers"
 import { tokens } from "@/config/tokens"
 import ERC20 from "@/lib/artifacts/interfaces/IERC20.json"
 import { useWeb3 } from "./use-web3"
+import { getEthersSigner } from "@/config/wagmi.config"
+import { wagmiConfig } from "@/config/wagmi.config"
 
 export function useTokenBalance(tokenName: string) {
   const { web3Data } = useWeb3()
@@ -13,8 +15,8 @@ export function useTokenBalance(tokenName: string) {
     queryFn: async () => {
       if (!window.ethereum || !web3Data?.account) return null
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = provider.getSigner()
+      const signer = await getEthersSigner(wagmiConfig);
+      
       const decimals = tokens[currentNet][tokenName]["decimals"]
       const tokenAddress = tokens[currentNet][tokenName]["address"]
       

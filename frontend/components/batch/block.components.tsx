@@ -22,7 +22,7 @@ const BlockComponent: FC<BlockContextType> = ({
       value={{
         block,
         updateBlockField,
-        setBlocks,
+      setBlocks,
       }}
     >
       {block.action === "Squid Router" && <SquidBlock />}
@@ -30,6 +30,7 @@ const BlockComponent: FC<BlockContextType> = ({
       {block.action === "Add Liquidity" && <AddLiquidityBlock />}
       {block.action === "1inch Cross Chain Swap" && <OneInchBlock />}
       {block.action === "Remove Liquidity" && <RemoveLiquidityBlock />}
+   
   
     </BlockContext.Provider>
   )

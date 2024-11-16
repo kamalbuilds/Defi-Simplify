@@ -4,6 +4,8 @@ import { tokens, exchanges, exchangesMap } from "@/lib/helpers"
 import { useWeb3 } from "./use-web3"
 import qs from "qs"
 import { useExchanges } from "./use-exchanges"
+import { wagmiConfig } from "@/config/wagmi.config"
+import { getEthersProvider } from "@/config/wagmi.config"
 
 interface SwapPrice {
   amountOut: number
@@ -21,13 +23,13 @@ export function useSwapPrice(fromTokenName: string, toTokenName: string, amountI
     queryFn: async () => {
       if (!window.ethereum || !amountIn) throw new Error("Invalid input")
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
+      const provider = getEthersProvider(wagmiConfig)
       const decimals = tokens[currentNet][toTokenName]["decimals"]
       const _tokenIn = tokens[currentNet][fromTokenName]["address"]
       const _tokenOut = tokens[currentNet][toTokenName]["address"]
       const path = [_tokenIn, _tokenOut]
 
-      const amount_in = ethers.parseEther(amountIn)
+      const amount_in = ethers.utils.parseEther(amountIn)
       
       // Get prices from all exchanges
       const prices = await Promise.all(
@@ -62,7 +64,7 @@ export function useSwapPrice(fromTokenName: string, toTokenName: string, amountI
       const params = {
         sellToken: _tokenIn,
         buyToken: _tokenOut,
-        sellAmount: ethers.parseEther(amountIn).toString(),
+        sellAmount: ethers.utils.parseEther(amountIn).toString(),
       }
       const response = await fetch(
         `https://api.0x.org/swap/v1/price?${qs.stringify(params)}`

@@ -5,6 +5,8 @@ import { useWeb3 } from "./use-web3"
 import IRouter from "@/lib/artifacts/interfaces/IUniswapV2Router02.json"
 import ISwapRouter from "@/lib/artifacts/interfaces/ISwapRouter.json"
 import ERC20 from "@/lib/artifacts/interfaces/IERC20.json"
+import { getEthersSigner } from "@/config/wagmi.config"
+import { wagmiConfig } from "@/config/wagmi.config"
 
 interface SwapParams {
   fromToken: string
@@ -22,15 +24,14 @@ export function useSwapExecution() {
     mutationFn: async ({ fromToken, toToken, amountIn, amountOutMin, exchange }: SwapParams) => {
       if (!window.ethereum || !web3Data?.account) throw new Error("No provider")
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
+      const signer = await getEthersSigner(wagmiConfig)
       
       const _tokenIn = tokens[currentNet][fromToken]["address"]
       const _tokenOut = tokens[currentNet][toToken]["address"]
       const path = [_tokenIn, _tokenOut]
 
-      const amount_in = ethers.parseEther(amountIn)
-      const amount_out_min = ethers.parseEther(amountOutMin)
+      const amount_in = ethers.utils.parseEther(amountIn)
+      const amount_out_min = ethers.utils.parseEther(amountOutMin)
 
       
       // Approve token

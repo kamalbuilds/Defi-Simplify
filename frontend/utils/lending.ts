@@ -16,7 +16,7 @@ export const encodeLendingData = (block: SquidBlockData): string => {
   // Encode the function call
   const encodedData = iface.encodeFunctionData(functionName, [
     block.toToken, // asset address
-    ethers.parseUnits(block.amount, 18), // amount with 18 decimals
+    ethers.utils.parseUnits(block.amount, 18), // amount with 18 decimals
     block.fromAddress, // onBehalfOf (user's address)
     0 // referralCode (0 for no referral)
   ])

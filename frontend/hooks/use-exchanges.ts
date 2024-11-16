@@ -37,7 +37,7 @@ export function useExchanges(fromTokenName: string, toTokenName: string) {
     queryFn: async () => {
       if (!window.ethereum) throw new Error("No provider")
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
+      
 
       console.log(
         "tokens[currentNet]",
@@ -55,7 +55,7 @@ export function useExchanges(fromTokenName: string, toTokenName: string) {
       if (!token0 || !token1) throw new Error("Token not found")
 
       const decimals = token1.decimals
-      const amountIn = ethers.parseUnits("1", token0.decimals)
+      const amountIn = ethers.utils.parseUnits("1", token0.decimals)
 
       console.log("Exchanges:", exchanges[currentNet])
       const items = await Promise.all(

@@ -31,7 +31,7 @@ export const UnifiedBridge = async ({
 
   const destinationNetworkId = 1 // Ensure this matches the destination network ID
   const tokenAddress = zeroAddress // ERC20 token contract address
-  const tokenAmount = ethers.parseUnits("0.1", 18) // Amount of tokens to bridge (10 tokens with 18 decimals)
+  const tokenAmount = ethers.utils.parseUnits("0.1", 18) // Amount of tokens to bridge (10 tokens with 18 decimals)
   const destinationAddress = activeAccount.address // The address to send tokens to
 
   const txn = await bridgeContract.bridgeAsset(
@@ -42,7 +42,7 @@ export const UnifiedBridge = async ({
     true,
     "0x",
     {
-      value: ethers.parseEther("0.05"), // Enter amount here
+      value: ethers.utils.parseEther("0.05"), // Enter amount here
       gasLimit: 300000, // Optional: Adjust as needed
     }
   )

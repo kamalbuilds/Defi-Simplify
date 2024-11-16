@@ -5,6 +5,7 @@ import { useWeb3 } from "@/hooks/use-web3"
 import IRouter from "@/lib/artifacts/interfaces/IUniswapV2Router02.json"
 import ISwapRouter from "@/lib/artifacts/interfaces/ISwapRouter.json"
 import ERC20 from "@/lib/artifacts/interfaces/IERC20.json"
+import { getEthersProvider, getEthersSigner, wagmiConfig } from "@/config/wagmi.config"
 
 export function useSwap(fromToken: string, toToken: string, amountIn: string) {
   const { web3Data } = useWeb3()
@@ -15,18 +16,21 @@ export function useSwap(fromToken: string, toToken: string, amountIn: string) {
     queryFn: async () => {
       if (!window.ethereum || !amountIn) return null
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
+
+        const provider = getEthersProvider(wagmiConfig)
+   
+      const signer = await getEthersSigner(wagmiConfig)
       const decimals = tokens[currentNet][toToken]["decimals"]
       const _tokenIn = tokens[currentNet][fromToken]["address"]
       const _tokenOut = tokens[currentNet][toToken]["address"]
       const path = [_tokenIn, _tokenOut]
 
-      const amount_in = ethers.parseEther(amountIn.toString())
+      const amount_in = ethers.utils.parseEther(amountIn.toString())
       
       const prices = await Promise.all(
         exchanges[currentNet].map(async (e) => {
           if (e.name !== "Uniswap V3") {
-            const router = new ethers.Contract(e.address, e.router.abi, provider)
+            const router = new ethers.Contract(e.address, e.router.abi, signer)
             try {
               const amount = await router.getAmountsOut(amount_in, path)
               return Number(amount[1])
@@ -34,7 +38,7 @@ export function useSwap(fromToken: string, toToken: string, amountIn: string) {
               return 0
             }
           } else {
-            const quoter = new ethers.Contract(e.address, e.quoter.abi, provider)
+            const quoter = new ethers.Contract(e.address, e.quoter.abi, signer)
             try {
               const amount = await quoter.callStatic.quoteExactInputSingle(
                 _tokenIn,
@@ -66,15 +70,15 @@ export function useSwap(fromToken: string, toToken: string, amountIn: string) {
     mutationFn: async () => {
       if (!window.ethereum || !priceData?.bestExchange) throw new Error("No provider")
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = provider.getSigner()
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+      const signer = await provider.getSigner()
       const _tokenIn = tokens[currentNet][fromToken]["address"]
       const _tokenOut = tokens[currentNet][toToken]["address"]
       const path = [_tokenIn, _tokenOut]
 
       const _amountOutMin = priceData.amountOut * 0.95
-      const amountOutMin = ethers.parseEther(_amountOutMin.toString())
-      const amount_in = ethers.parseEther(amountIn.toString())
+      const amountOutMin = ethers.utils.parseEther(_amountOutMin.toString())
+      const amount_in = ethers.utils.parseEther(amountIn.toString())
 
       // Approve token
       const erc20Contract = new ethers.Contract(_tokenIn, ERC20.abi, signer)

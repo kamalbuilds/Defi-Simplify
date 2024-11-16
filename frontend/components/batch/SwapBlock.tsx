@@ -150,7 +150,7 @@ const SwapBlock = () => {
 
       if (!isApproved) {
         console.log(contract, "contract")
-        const amountWithDecimals = ethers.parseUnits(amount, swapFrom.decimals)
+        const amountWithDecimals = ethers.utils.parseUnits(amount, swapFrom.decimals)
         const tx = await contract.approve(routerAddress, amountWithDecimals)
         console.log("Tx", tx);
 
