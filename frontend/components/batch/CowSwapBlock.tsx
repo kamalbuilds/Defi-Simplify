@@ -31,20 +31,20 @@ const CowSwapBlock = () => {
   const activeWalletChain = useActiveWalletChain()
   const chainId = activeWalletChain?.id
 
-  const availableTokens = cowTokens.filter(token => token.chainId === chainId)
-
+  const availableTokens = cowTokens.filter(token => token.chainId === (block.fromChain || chainId))
+  
   const handleAmountChange = async (amount: string) => {
     updateBlockField(block.id, { amount })
     
     if (!amount || !block.fromToken || !block.toToken) return
 
     try {
-      const fromToken = cowTokens.find(t => t.symbol === block.fromToken && t.chainId === chainId)
-      const toToken = cowTokens.find(t => t.symbol === block.toToken && t.chainId === chainId)
+      const fromToken = cowTokens.find(t => t.symbol === block.fromToken && t.chainId === block.fromChain)
+      const toToken = cowTokens.find(t => t.symbol === block.toToken && t.chainId === block.fromChain)
 
       if (!fromToken || !toToken) return
 
-      const orderBookApi = new OrderBookApi({ chainId, env: "staging" })
+      const orderBookApi = new OrderBookApi({ chainId: block.fromChain, env: "staging" })
       
       const quoteRequest = {
         sellToken: fromToken.address,
@@ -64,20 +64,27 @@ const CowSwapBlock = () => {
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <label>Network</label>
-        <Select
-          value={chainId?.toString()}
-          onValueChange={(value) => {
-            // This is informational only - can't change chain here
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue>
-              {SUPPORTED_CHAINS.find(chain => chain.id === chainId)?.name || "Unsupported Network"}
-            </SelectValue>
-          </SelectTrigger>
-        </Select>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label>Chain</label>
+          <Select
+            value={block.fromChain?.toString()}
+            onValueChange={(value) => updateBlockField(block.id, { fromChain: Number(value) })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select chain" />
+            </SelectTrigger>
+            <SelectContent>
+              {SUPPORTED_CHAINS.map((chain) => (
+                <SelectItem key={chain.id} value={chain.id.toString()}>
+                  {chain.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+      
       </div>
 
       <div className="space-y-2">
@@ -116,20 +123,18 @@ const CowSwapBlock = () => {
             <SelectValue placeholder="Select token" />
           </SelectTrigger>
           <SelectContent>
-            {availableTokens
-              .filter(token => token.symbol !== block.fromToken)
-              .map((token) => (
-                <SelectItem key={token.address} value={token.symbol}>
-                  <div className="flex items-center gap-2">
-                    <img 
-                      src={token.logoURI} 
-                      alt={token.symbol} 
-                      className="w-5 h-5 rounded-full"
-                    />
-                    {token.symbol}
-                  </div>
-                </SelectItem>
-              ))}
+            {availableTokens.map((token) => (
+              <SelectItem key={token.address} value={token.symbol}>
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={token.logoURI} 
+                    alt={token.symbol} 
+                    className="w-5 h-5 rounded-full"
+                  />
+                  {token.symbol}
+                </div>
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -149,7 +154,7 @@ const CowSwapBlock = () => {
           <p className="text-sm text-muted-foreground">You will receive approximately:</p>
           <p className="text-lg font-bold">
             {ethers.utils.formatUnits(block.amountout || '0', 18)} {block.toToken}
-          </p>
+          </p>x
         </div>
       )}
     </div>
