@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import ReactDOM from 'react-dom/client'
 import { PluginClient } from '@remixproject/plugin'
 import { createClient } from '@remixproject/plugin-webview'
 import { SapphireDeployer } from './components/SapphireDeployer'
@@ -17,18 +17,15 @@ export class SapphirePlugin extends PluginClient {
   private initUI() {
     const root = document.getElementById('root')
     if (root) {
-      ReactDOM.render(
-        React.createElement(SapphireDeployer),
-        root
+      ReactDOM.createRoot(root).render(
+        React.createElement(SapphireDeployer)
       )
     }
   }
 
   async deploy() {
-    // This method can be called from Remix IDE
     return new Promise((resolve, reject) => {
       try {
-        // Implementation will be handled by the React component
         resolve(true)
       } catch (error) {
         reject(error)
