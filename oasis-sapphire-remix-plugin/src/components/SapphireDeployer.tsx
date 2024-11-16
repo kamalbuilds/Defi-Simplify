@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import * as React from 'react';
+import  { useState } from 'react'
 import { PluginClient } from '@remixproject/plugin'
 import { createClient } from '@remixproject/plugin-webview'
 import * as sapphire from '@oasisprotocol/sapphire-paratime'
