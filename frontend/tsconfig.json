@@ -1,24 +1,29 @@
 {
   "compilerOptions": {
-    "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react",
+    "jsx": "preserve",
     "baseUrl": ".",
-    "outDir": "./dist",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["./*"]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "strictNullChecks": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/types/**/*.d.ts"],
-  "exclude": ["node_modules"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules" , "@cowprotocol/cow-sdk"]
 }
