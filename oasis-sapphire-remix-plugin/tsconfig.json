@@ -6,7 +6,6 @@
       "skipLibCheck": true,
       "strict": true,
       "forceConsistentCasingInFileNames": true,
-      "noEmit": false,
       "esModuleInterop": true,
       "module": "esnext",
       "moduleResolution": "node",
@@ -14,10 +13,11 @@
       "isolatedModules": true,
       "jsx": "react",
       "baseUrl": ".",
+      "outDir": "./dist",
       "paths": {
         "@/*": ["./src/*"]
       }
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/types/**/*.d.ts"],
     "exclude": ["node_modules"]
   }

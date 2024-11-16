@@ -1,0 +1,36 @@
+.sapphire-deployer {
+    padding: 20px;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  
+  .network-manager {
+    margin: 20px 0;
+  }
+  
+  .deployment-section {
+    margin-top: 20px;
+  }
+  
+  button {
+    background: #6851ff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .error-message {
+    color: #dc2626;
+    margin-top: 10px;
+  }
+  
+  .success-message {
+    color: #059669;
+    margin-top: 10px;
+  }

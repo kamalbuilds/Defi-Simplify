@@ -1,55 +1,98 @@
-import * as React from 'react';
-import  { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { PluginClient } from '@remixproject/plugin'
 import { createClient } from '@remixproject/plugin-webview'
 import * as sapphire from '@oasisprotocol/sapphire-paratime'
 import { ethers } from 'ethers'
+import { NetworkManager } from './NetworkManager'
 
 const client = createClient(new PluginClient())
 
-const SAPPHIRE_TESTNET = {
-  chainId: 23295,
-  name: 'Sapphire TestNet',
-  rpcUrls: ['https://testnet.sapphire.oasis.dev'],
-  nativeCurrency: { name: 'TEST', symbol: 'TEST', decimals: 18 }
-}
-
-export const SapphireDeployer = () => {
+export const SapphireDeployer: React.FC = () => {
   const [deployed, setDeployed] = useState('')
-  
+  const [network, setNetwork] = useState('')
+  const [compiling, setCompiling] = useState(false)
+  const [deploying, setDeploying] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    client.onload(() => {
+      console.log('Plugin loaded!')
+    })
+  }, [])
+
   const deployContract = async () => {
+    setError('')
+    setDeploying(true)
+    
     try {
-      // Get compiled contract from Remix
       const compiled = await client.call('solidity', 'getCompilationResult')
-      const contract = compiled.data.contracts['test.sol']['Test']
       
-      // Setup provider and signer
+      if (!compiled || !compiled.data) {
+        throw new Error('No compilation result found. Please compile your contract first.')
+      }
+
+      const contractName = Object.keys(compiled.data.contracts['test.sol'])[0]
+      const contract = compiled.data.contracts['test.sol'][contractName]
+
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       const wrappedProvider = sapphire.wrap(provider)
       const signer = wrappedProvider.getSigner()
-      
-      // Deploy contract
+
       const factory = new ethers.ContractFactory(
         contract.abi,
         contract.evm.bytecode.object,
         signer
       )
-      
+
       const deployedContract = await factory.deploy()
       await deployedContract.deployed()
-      
+
       setDeployed(deployedContract.address)
       
-    } catch (err) {
+      // Notify Remix about the deployment
+      await client.call('udapp', 'sendTransaction', {
+        data: contract.evm.bytecode.object,
+        to: deployedContract.address,
+        gasLimit: '3000000',
+        value: '0',
+        from: await signer.getAddress(),
+        useCall: true
+      })
+
+    } catch (err: any) {
+      setError(err.message || 'Deployment failed')
       console.error(err)
+    } finally {
+      setDeploying(false)
     }
   }
 
   return (
-    <div>
-      <h3>Deploy to Sapphire</h3>
-      <button onClick={deployContract}>Deploy Contract</button>
-      {deployed && <p>Deployed to: {deployed}</p>}
+    <div className="sapphire-deployer">
+      <h2>Oasis Sapphire Deployment</h2>
+      
+      <NetworkManager onNetworkChange={setNetwork} />
+      
+      <div className="deployment-section">
+        <button 
+          onClick={deployContract}
+          disabled={deploying || !network}
+        >
+          {deploying ? 'Deploying...' : 'Deploy Contract'}
+        </button>
+
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+
+        {deployed && (
+          <div className="success-message">
+            Contract deployed at: {deployed}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
