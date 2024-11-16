@@ -7,6 +7,7 @@ import SwapBlock from "./SwapBlock"
 import OneInchBlock from "./1inchBlock"
 import SquidBlock from "./SquidBlock"
 import { RemoveLiquidityBlock } from "./removeliquidityblock"
+import CowSwapBlock from "./CowSwapBlock"
 
 export const BlockContext = React.createContext<BlockContextType | undefined>(
   undefined
@@ -22,7 +23,7 @@ const BlockComponent: FC<BlockContextType> = ({
       value={{
         block,
         updateBlockField,
-      setBlocks,
+        setBlocks,
       }}
     >
       {block.action === "Squid Router" && <SquidBlock />}
@@ -30,7 +31,7 @@ const BlockComponent: FC<BlockContextType> = ({
       {block.action === "Add Liquidity" && <AddLiquidityBlock />}
       {block.action === "1inch Cross Chain Swap" && <OneInchBlock />}
       {block.action === "Remove Liquidity" && <RemoveLiquidityBlock />}
-   
+      {block.action === "CoW Swap" && <CowSwapBlock />}
   
     </BlockContext.Provider>
   )

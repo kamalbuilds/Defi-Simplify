@@ -11,7 +11,7 @@ export type BlockType = {
   fromToken: string
   toToken: string
   amount: string
-  amountout?: number
+  amountout?: number | string
   exchangeName?: string
 }
 

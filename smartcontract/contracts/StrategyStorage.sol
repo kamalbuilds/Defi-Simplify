@@ -8,7 +8,7 @@ contract StrategyStorage is Ownable {
     mapping(address => string[]) private walletStrategies;
     
     // Events
-    event StrategyAdded(address in`dexed wallet, string strategyUrl);
+    event StrategyAdded(address indexed wallet, string strategyUrl);
     event StrategyRemoved(address indexed wallet, string strategyUrl);
     
     constructor() Ownable(msg.sender) {}

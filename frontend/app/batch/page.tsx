@@ -253,7 +253,7 @@ export default function BatchComponent() {
                 throw new Error(`Tokens not supported on CoW Swap for chain ${chainId}`)
               }
 
-              const orderBookApi = new OrderBookApi({ chainId, env: "production" })
+              const orderBookApi = new OrderBookApi({ chainId, env: "staging" })
               
               const quoteRequest = {
                 sellToken: fromToken.address,
