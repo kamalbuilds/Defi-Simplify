@@ -1,15 +1,15 @@
 import { StaticImageData } from "next/image"
+import bnbImg from "@/public/images/BNB_image.webp"
+import busdImg from "@/public/images/BUSD_image.webp"
 import daiImg from "@/public/images/dai.png"
 // Import token images
 import ethImg from "@/public/images/eth.png"
 // import wbtcImg from "@/public/images/wbtc.png"
 import linkImg from "@/public/images/link.png"
+import pancakeImg from "@/public/images/pancake_logo.webp"
 import uniImg from "@/public/images/uni.jpg"
 import usdcImg from "@/public/images/usdc.png"
 import usdtImg from "@/public/images/usdt.png"
-import bnbImg from "@/public/images/BNB_image.webp"
-import busdImg from "@/public/images/BUSD_image.webp"
-import pancakeImg from "@/public/images/pancake_logo.webp"
 
 import IQouter from "@/lib/artifacts/interfaces/IQuoter.json"
 import ISwapRouter from "@/lib/artifacts/interfaces/ISwapRouter.json"
@@ -40,7 +40,7 @@ export const TokensList = {
   "BSC Mainnet": [
     {
       name: "Wrapped Binance",
-      symbol: "WBNB", 
+      symbol: "WBNB",
       decimals: 18,
       address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
     },
@@ -161,7 +161,15 @@ export const exchanges: Record<string, Exchange[]> = {
         abi: IRouter,
         address: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
       },
-    }
+    },
+    {
+      name: "PancakeSwap",
+      address: "",
+      router: {
+        abi: IRouter,
+        address: "",
+      },
+    },
   ],
   "BSC Mainnet": [
     {
@@ -179,8 +187,8 @@ export const exchanges: Record<string, Exchange[]> = {
         abi: IRouter,
         address: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
       },
-    }
-  ]
+    },
+  ],
 }
 
 // Create a map of exchanges for easier lookup

@@ -2,13 +2,14 @@ import React, { FC, useContext } from "react"
 
 import { BlockContextType, BlockType } from "@/types/nav"
 
-import { AddLiquidityBlock } from "./AddLiquidityBlock"
-import SwapBlock from "./SwapBlock"
 import OneInchBlock from "./1inchBlock"
-import SquidBlock from "./SquidBlock"
-import { RemoveLiquidityBlock } from "./removeliquidityblock"
-import CowSwapBlock from "./CowSwapBlock"
+import { AddLiquidityBlock } from "./AddLiquidityBlock"
 import CCIPBlock from "./CCIPBlock"
+import CowSwapBlock from "./CowSwapBlock"
+import Lifi from "./Lifi"
+import SquidBlock from "./SquidBlock"
+import SwapBlock from "./SwapBlock"
+import { RemoveLiquidityBlock } from "./removeliquidityblock"
 
 export const BlockContext = React.createContext<BlockContextType | undefined>(
   undefined
@@ -34,6 +35,7 @@ const BlockComponent: FC<BlockContextType> = ({
       {block.action === "Remove Liquidity" && <RemoveLiquidityBlock />}
       {block.action === "CoW Swap" && <CowSwapBlock />}
       {block.action === "CCIP Transfer" && <CCIPBlock />}
+      {block.action === "Lifi Swap" && <Lifi />}
     </BlockContext.Provider>
   )
 }

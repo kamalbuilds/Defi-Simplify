@@ -4,13 +4,13 @@ import { useMemo } from "react"
 import { fetchPancakeSwapRoute } from "@/helpers/pancakeSwap"
 import { bscTokens, ethereumTokens } from "@pancakeswap/tokens"
 import { useQuery } from "@tanstack/react-query"
+import { ethers } from "ethers"
+import { ethers6Adapter } from "thirdweb/adapters/ethers6"
+import { bsc } from "thirdweb/chains"
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react"
 
 import { exchanges, tokens } from "@/lib/helpers"
 import { useWeb3 } from "@/hooks/use-web3"
-import { ethers } from "ethers"
-import { ethers6Adapter } from "thirdweb/adapters/ethers6"
-import { bsc } from "thirdweb/chains"
 import { client } from "@/components/client"
 
 export function useExchanges(fromTokenName: string, toTokenName: string) {
@@ -36,8 +36,6 @@ export function useExchanges(fromTokenName: string, toTokenName: string) {
     queryKey: ["exchanges", fromTokenName, toTokenName, currentNet],
     queryFn: async () => {
       if (!window.ethereum) throw new Error("No provider")
-
-      
 
       console.log(
         "tokens[currentNet]",
@@ -65,7 +63,7 @@ export function useExchanges(fromTokenName: string, toTokenName: string) {
             client,
             chain: activeWalletChain!,
             account: activeAccount!,
-          });
+          })
 
           const router = new ethers.Contract(
             e.router.address,
@@ -78,10 +76,12 @@ export function useExchanges(fromTokenName: string, toTokenName: string) {
           try {
             let amount
             if (e.name === "PancakeSwap") {
+              const fromTokens = chainId === 1 ? ethereumTokens : bscTokens
+
               const swapFrom =
-                bscTokens[token0.name.toLowerCase() as keyof typeof bscTokens]
+                fromTokens[token0.name.toLowerCase() as keyof typeof fromTokens]
               const swapTo =
-                bscTokens[token1.name.toLowerCase() as keyof typeof bscTokens]
+                fromTokens[token1.name.toLowerCase() as keyof typeof fromTokens]
               console.log("Swap From and TO", swapFrom, swapTo)
               const tradeRoute = await fetchPancakeSwapRoute({
                 swapFrom,

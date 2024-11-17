@@ -1,11 +1,36 @@
 "use client"
 
 import { createContext, useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
+import {
+  checkIfBucketExists,
+  handleCreateGreenFieldBucket,
+  handleCreateGreenFieldObject,
+} from "@/helpers/greenFieldFunc"
+import { initKlasterService } from "@/services/AbstractService"
+import { greenfieldTestnet } from "@/utils/chain.utils"
+import {
+  OrderBookApi,
+  OrderQuoteSideKindSell,
+  OrderSigningUtils,
+} from "@cowprotocol/cow-sdk"
+import { bscTokens } from "@pancakeswap/tokens"
+import { ethers } from "ethers"
 import { ChevronLeft, ChevronRight, Minus, Plus, Trash2 } from "lucide-react"
-import { useActiveWallet, useActiveWalletChain } from "thirdweb/react"
+import { ethers6Adapter } from "thirdweb/adapters/ethers6"
+import {
+  useActiveAccount,
+  useActiveWallet,
+  useActiveWalletChain,
+} from "thirdweb/react"
+import { hexToBigInt } from "viem"
+import { useAccount } from "wagmi"
 
 import { BlockType } from "@/types/nav"
 import { tokens } from "@/config/tokens"
+import { cowTokens } from "@/lib/cowtokens"
+import { useCCIP } from "@/hooks/use-ccip"
+import { usePancakeswapLiquidity } from "@/hooks/use-pancakeswap-liquidity"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -22,25 +47,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import BlockComponent from "@/components/batch/block.components"
-import { bscTokens } from "@pancakeswap/tokens"
-import { hexToBigInt } from "viem"
-import { useActiveAccount } from "thirdweb/react"
-import { executePancakeSwap } from "@/components/pancakeswap/pancakeswap"
-import { usePancakeswapLiquidity } from "@/hooks/use-pancakeswap-liquidity"
-import { checkIfBucketExists, handleCreateGreenFieldBucket, handleCreateGreenFieldObject } from "@/helpers/greenFieldFunc"
-import { greenfieldTestnet } from "@/utils/chain.utils"
 import Spinner from "@/components/Spinner"
-import { useAccount } from "wagmi"
-import { useRouter } from "next/navigation"
-import { OrderBookApi, OrderQuoteSideKindSell, OrderSigningUtils } from "@cowprotocol/cow-sdk"
-import { cowTokens } from "@/lib/cowtokens"
-import { ethers } from "ethers"
-import { ethers6Adapter  } from "thirdweb/adapters/ethers6"
+import BlockComponent from "@/components/batch/block.components"
 import { client } from "@/components/client"
-import { useCCIP } from "@/hooks/use-ccip"
+import { executePancakeSwap } from "@/components/pancakeswap/pancakeswap"
 
-const defiActions = ["Swap", "Add Liquidity", "Remove Liquidity", "1inch Cross Chain Swap", "Squid Router", "CoW Swap", "CCIP Transfer"]
+const defiActions = [
+  "Swap",
+  "Add Liquidity",
+  "Remove Liquidity",
+  "1inch Cross Chain Swap",
+  "Squid Router",
+  "CoW Swap",
+  "CCIP Transfer",
+  "Lifi Swap"
+]
 
 const BlockContext = createContext<
   | {
@@ -57,12 +78,12 @@ export default function BatchComponent() {
   const activeWalletChain = useActiveWalletChain()
   const chainId = activeWalletChain?.id
 
-  const { connector } = useAccount();
-  console.log("Connector >>>", connector);
-  console.log("chainId >>>", chainId);
+  const { connector, address } = useAccount()
+  console.log("Connector >>>", connector)
+  console.log("chainId >>>", chainId)
 
-  const router = useRouter();
-  const wallet = useActiveWallet();
+  const router = useRouter()
+  const wallet = useActiveWallet()
 
   const currentNet = useMemo(() => {
     switch (chainId) {
@@ -76,14 +97,14 @@ export default function BatchComponent() {
         return "BSC Mainnet"
         break
     }
-  }, [chainId]);
+  }, [chainId])
 
   // Add a state to hold the selected tokens
   const [fromToken, setFromToken] = useState<string>("")
   const [toToken, setToToken] = useState<string>("")
+  const activeAccount = useActiveAccount()
 
-
-  const { sendMessage } = useCCIP();
+  const { sendMessage } = useCCIP()
   // Update the currentNet effect to set fromToken and toToken
   useEffect(() => {
     if (currentNet === "Ethereum Mainnet") {
@@ -108,6 +129,20 @@ export default function BatchComponent() {
   useEffect(() => {
     updateBlockTokens()
   }, [fromToken, toToken])
+
+  const [klasterAddress, setKlasterAddress] = useState("")
+
+  useEffect(() => {
+    ; (async () => {
+      console.log("Active Account", activeAccount, address)
+
+      if (!activeAccount || !address) return
+      const klasterAddress = await initKlasterService(activeAccount, address)
+      console.log("Klaster address: ", klasterAddress)
+
+      setKlasterAddress(klasterAddress)
+    })()
+  }, [address, activeAccount])
 
   //   const addBlock = () => {
   //     setBlocks((prevBlocks) => [...prevBlocks, { id: nextId, action: "" }])
@@ -153,7 +188,6 @@ export default function BatchComponent() {
 
   console.log("Blockss", blocks)
 
-  const activeAccount = useActiveAccount()
   const { addLiquidity, removeLiquidity } = usePancakeswapLiquidity()
 
   const executeStrategy = () => {
@@ -171,8 +205,12 @@ export default function BatchComponent() {
                 throw new Error(`Invalid swap parameters in block ${block.id}`)
               }
 
-              const swapFrom = tokens[currentNet].find(t => t.name === block.fromToken)
-              const swapTo = tokens[currentNet].find(t => t.name === block.toToken)
+              const swapFrom = tokens[currentNet].find(
+                (t) => t.name === block.fromToken
+              )
+              const swapTo = tokens[currentNet].find(
+                (t) => t.name === block.toToken
+              )
 
               if (!swapFrom || !swapTo) {
                 throw new Error(`Invalid tokens in block ${block.id}`)
@@ -185,8 +223,14 @@ export default function BatchComponent() {
                   address: routerAddress,
                 } = await executePancakeSwap({
                   account: activeAccount.address,
-                  swapTo: bscTokens[block.toToken.toLowerCase() as keyof typeof bscTokens],
-                  swapFrom: bscTokens[block.fromToken.toLowerCase() as keyof typeof bscTokens],
+                  swapTo:
+                    bscTokens[
+                    block.toToken.toLowerCase() as keyof typeof bscTokens
+                    ],
+                  swapFrom:
+                    bscTokens[
+                    block.fromToken.toLowerCase() as keyof typeof bscTokens
+                    ],
                   chainId: chainId!!,
                   amount: block.amount,
                 })
@@ -203,12 +247,20 @@ export default function BatchComponent() {
 
             case "Add Liquidity":
               if (!block.fromToken || !block.toToken || !block.amount) {
-                throw new Error(`Invalid liquidity parameters in block ${block.id}`)
+                throw new Error(
+                  `Invalid liquidity parameters in block ${block.id}`
+                )
               }
 
               const slippagePercent = 0.005
-              const amountAMin = (parseFloat(block.amount) * (1 - slippagePercent)).toString()
-              const amountBMin = (parseFloat(block.amountout?.toString() || "0") * (1 - slippagePercent)).toString()
+              const amountAMin = (
+                parseFloat(block.amount) *
+                (1 - slippagePercent)
+              ).toString()
+              const amountBMin = (
+                parseFloat(block.amountout?.toString() || "0") *
+                (1 - slippagePercent)
+              ).toString()
 
               await addLiquidity({
                 tokenA: block.fromToken,
@@ -217,22 +269,24 @@ export default function BatchComponent() {
                 amountBDesired: block.amountout?.toString() || "0",
                 amountAMin,
                 amountBMin,
-                currentNet
+                currentNet,
               })
 
               break
 
             case "Remove Liquidity":
               if (!block.fromToken || !block.toToken || !block.amount) {
-                throw new Error(`Invalid remove liquidity parameters in block ${block.id}`)
+                throw new Error(
+                  `Invalid remove liquidity parameters in block ${block.id}`
+                )
               }
 
               // const removeLiquiditySlippage = 0.005 // 0.5%
               // const removeAmountAMin = (parseFloat(block.amount) * (1 - removeLiquiditySlippage)).toString()
               // const removeAmountBMin = (parseFloat(block.amount) * (1 - removeLiquiditySlippage)).toString()
 
-              const removeAmountAMin = '0'
-              const removeAmountBMin = '0'
+              const removeAmountAMin = "0"
+              const removeAmountBMin = "0"
 
               await removeLiquidity({
                 tokenA: block.fromToken,
@@ -240,43 +294,51 @@ export default function BatchComponent() {
                 liquidity: block.amount,
                 amountAMin: removeAmountAMin,
                 amountBMin: removeAmountBMin,
-                currentNet
+                currentNet,
               })
               break
 
             case "CoW Swap":
               if (!block.fromToken || !block.toToken || !block.amount) {
-                throw new Error(`Invalid CoW Swap parameters in block ${block.id}`)
+                throw new Error(
+                  `Invalid CoW Swap parameters in block ${block.id}`
+                )
               }
 
-              const fromToken = cowTokens.find(t => t.name === block.fromToken && t.chainId === chainId)
-              const toToken = cowTokens.find(t => t.name === block.toToken && t.chainId === chainId)
+              const fromToken = cowTokens.find(
+                (t) => t.name === block.fromToken && t.chainId === chainId
+              )
+              const toToken = cowTokens.find(
+                (t) => t.name === block.toToken && t.chainId === chainId
+              )
 
               if (!fromToken || !toToken) {
-                throw new Error(`Tokens not supported on CoW Swap for chain ${chainId}`)
+                throw new Error(
+                  `Tokens not supported on CoW Swap for chain ${chainId}`
+                )
               }
 
               const orderBookApi = new OrderBookApi({ chainId, env: "staging" })
-              
+
               const quoteRequest = {
                 sellToken: fromToken.address,
                 buyToken: toToken.address,
                 from: activeAccount.address,
                 receiver: activeAccount.address,
-                sellAmountBeforeFee: ethers.utils.parseUnits(block.amount, fromToken.decimals).toString(),
+                sellAmountBeforeFee: ethers.utils
+                  .parseUnits(block.amount, fromToken.decimals)
+                  .toString(),
                 kind: OrderQuoteSideKindSell.SELL,
               }
 
               const { quote } = await orderBookApi.getQuote(quoteRequest)
-              
+
               console.log("Quote from CoW Swap>>>", quote)
               const ethersSigner = await ethers6Adapter.signer.toEthers({
                 client: client,
                 chain: activeWalletChain!,
                 account: activeAccount,
               })
-
-
 
               const orderSigningResult = await OrderSigningUtils.signOrder(
                 quote,
@@ -289,35 +351,46 @@ export default function BatchComponent() {
                 signature: orderSigningResult.signature,
               })
 
-              break;
+              break
 
-              case "CCIP Transfer":
-                  if (!block.destinationChainSelector || !block.fromToken || !block.amount) {
-                    throw new Error(`Invalid CCIP parameters in block ${block.id}`)
-                  }
+            case "CCIP Transfer":
+              if (
+                !block.destinationChainSelector ||
+                !block.fromToken ||
+                !block.amount
+              ) {
+                throw new Error(`Invalid CCIP parameters in block ${block.id}`)
+              }
 
-                  const ccipToken = tokens[currentNet].find(t => t.name === block.fromToken)
-                  if (!ccipToken) {
-                    throw new Error(`Invalid token in block ${block.id}`)
-                  }
+              const ccipToken = tokens[currentNet].find(
+                (t) => t.name === block.fromToken
+              )
+              if (!ccipToken) {
+                throw new Error(`Invalid token in block ${block.id}`)
+              }
 
-                  await sendMessage({
-                    destinationChainSelector: block.destinationChainSelector,
-                    receiver: activeAccount.address, // Sending to same address on destination chain
-                    token: ccipToken.address,
-                    amount: block.amount,
-                    message: block.message || ""
-                  })
-                  break
+              await sendMessage({
+                destinationChainSelector: block.destinationChainSelector,
+                receiver: activeAccount.address, // Sending to same address on destination chain
+                token: ccipToken.address,
+                amount: block.amount,
+                message: block.message || "",
+              })
+              break
 
             default:
-              throw new Error(`Unknown action "${block.action}" in block ${block.id}`)
+              throw new Error(
+                `Unknown action "${block.action}" in block ${block.id}`
+              )
           }
 
           console.log(`Successfully executed block ${block.id}`)
         } catch (error) {
           console.error(`Error executing block ${block.id}:`, error)
-          alert(`Error executing block ${block.id}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+          alert(
+            `Error executing block ${block.id}: ${error instanceof Error ? error.message : "Unknown error"
+            }`
+          )
           return
         }
       }
@@ -331,21 +404,19 @@ export default function BatchComponent() {
     setBlocks(blocks.slice(0, -1))
   }
 
-  const [strategyName, setStrategyName] = useState('')
-  const [savingStrategy, setSavingStrategy] = useState(false);
-
+  const [strategyName, setStrategyName] = useState("")
+  const [savingStrategy, setSavingStrategy] = useState(false)
 
   const handleSaveStrategy = async () => {
     console.log(activeAccount, strategyName, wallet)
-    if (!activeAccount || !strategyName || !wallet) return;
+    if (!activeAccount || !strategyName || !wallet) return
 
-    setSavingStrategy(true);
+    setSavingStrategy(true)
     try {
-
-      const bucketName = activeAccount.address.toLowerCase();
+      const bucketName = activeAccount.address.toLowerCase()
       const isBucketAvailable = await checkIfBucketExists({
-        bucketName: bucketName
-      });
+        bucketName: bucketName,
+      })
 
       if (!isBucketAvailable) {
         await handleCreateGreenFieldBucket({
@@ -353,35 +424,37 @@ export default function BatchComponent() {
           bucketName: bucketName,
           activeAccount,
           connector,
-        });
+        })
       }
 
-      const strategyData = [...blocks];
-      const jsonString = JSON.stringify(strategyData);
-      const jsonBlob = new Blob([jsonString], { type: "application/json" });
-      const timestamp = new Date().getTime();
-      const fileName = `${strategyName}-${timestamp}.json`;
-      const jsonFile = new File([jsonBlob], fileName, { type: "application/json" });
+      const strategyData = [...blocks]
+      const jsonString = JSON.stringify(strategyData)
+      const jsonBlob = new Blob([jsonString], { type: "application/json" })
+      const timestamp = new Date().getTime()
+      const fileName = `${strategyName}-${timestamp}.json`
+      const jsonFile = new File([jsonBlob], fileName, {
+        type: "application/json",
+      })
 
       await handleCreateGreenFieldObject({
         address: activeAccount.address,
         bucketName: bucketName,
         jsonFile: jsonFile,
         strategyName: fileName,
-        connector
-      });
+        connector,
+      })
 
-      alert('Strategy saved successfully!');
-      setBlocks([]);
-      setStrategyName('');
-      router.push('/your-strategy')
+      alert("Strategy saved successfully!")
+      setBlocks([])
+      setStrategyName("")
+      router.push("/your-strategy")
     } catch (error) {
-      console.error("Error saving strategy:", error);
-      alert('Failed to save strategy. Please try again.');
+      console.error("Error saving strategy:", error)
+      alert("Failed to save strategy. Please try again.")
     } finally {
-      setSavingStrategy(false);
+      setSavingStrategy(false)
     }
-  };
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -401,13 +474,21 @@ export default function BatchComponent() {
         </Button>
 
         <div className="flex flex-row gap-4">
-          <Input className="min-w-60" type="text" placeholder="Enter Strategy name" onChange={(e) => {
-            setStrategyName(e.target.value)
-          }} />
-          <Button className="w-full" onClick={handleSaveStrategy} disabled={blocks.length === 0}>
+          <Input
+            className="min-w-60"
+            type="text"
+            placeholder="Enter Strategy name"
+            onChange={(e) => {
+              setStrategyName(e.target.value)
+            }}
+          />
+          <Button
+            className="w-full"
+            onClick={handleSaveStrategy}
+            disabled={blocks.length === 0}
+          >
             Save Strategy
           </Button>
-
         </div>
       </div>
       <div className="relative">
@@ -438,7 +519,9 @@ export default function BatchComponent() {
                   <CardContent className="space-y-4">
                     <Select
                       value={block.action}
-                      onValueChange={(value) => updateBlockAction(block.id, value)}
+                      onValueChange={(value) =>
+                        updateBlockAction(block.id, value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a DeFi action" />

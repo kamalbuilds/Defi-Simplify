@@ -1,11 +1,22 @@
 import React, { useContext, useMemo, useState } from "react"
 import Image from "next/image"
+import { handleCheckApprove } from "@/helpers/checkApprove"
+import { crossChainMint } from "@/services/AbstractService"
 import { bscTokens } from "@pancakeswap/tokens"
+import { Contract, ethers } from "ethers"
 import { ArrowDownUp, Blocks } from "lucide-react"
 import { getContract, hexToBigInt } from "thirdweb"
-import { useActiveAccount, useActiveWalletChain, useReadContract } from "thirdweb/react"
-import { bsc } from 'thirdweb/chains'
+import { ethers6Adapter } from "thirdweb/adapters/ethers6"
+import { bsc } from "thirdweb/chains"
+import {
+  useActiveAccount,
+  useActiveWalletChain,
+  useReadContract,
+} from "thirdweb/react"
+
+import { ERC20ABI } from "@/config/ERC20Abi"
 import { IToken, tokens } from "@/config/tokens"
+import { use1InchTokens } from "@/hooks/use-1inch-tokens"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -14,17 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { client } from "@/components/client";
+import { client } from "@/components/client"
+
+import ViewExchanges from "../Exchanges/ViewExchanges"
 import TokenOutput from "../TokenOutput"
 import { executePancakeSwap } from "../pancakeswap/pancakeswap"
 import { Button } from "../ui/button"
 import { BlockContext } from "./block.components"
-import { use1InchTokens } from "@/hooks/use-1inch-tokens"
-import { ERC20ABI } from "@/config/ERC20Abi"
-import { Contract, ethers } from "ethers"
-import { ethers6Adapter } from "thirdweb/adapters/ethers6";
-import { handleCheckApprove } from "@/helpers/checkApprove"
-import ViewExchanges from "../Exchanges/ViewExchanges"
 
 const SwapBlock = () => {
   const context = useContext(BlockContext)
@@ -130,29 +137,31 @@ const SwapBlock = () => {
         amount,
       })
 
-
       const ethersSigner = await ethers6Adapter.signer.toEthers({
         client,
         chain: bsc,
         account: activeAccount,
-      });
-      const contract = new Contract(swapFrom.address, ERC20ABI, ethersSigner);
+      })
+      const contract = new Contract(swapFrom.address, ERC20ABI, ethersSigner)
 
       const isApproved = await handleCheckApprove({
         activeAccount,
         token: swapFrom,
         routerAddress: routerAddress,
         amount,
-        contract
+        contract,
       })
 
       console.log("isApproved", isApproved)
 
       if (!isApproved) {
         console.log(contract, "contract")
-        const amountWithDecimals = ethers.utils.parseUnits(amount, swapFrom.decimals)
+        const amountWithDecimals = ethers.utils.parseUnits(
+          amount,
+          swapFrom.decimals
+        )
         const tx = await contract.approve(routerAddress, amountWithDecimals)
-        console.log("Tx", tx);
+        console.log("Tx", tx)
 
         await activeAccount.sendTransaction(tx)
       }
@@ -166,44 +175,16 @@ const SwapBlock = () => {
 
       await activeAccount.sendTransaction(tx)
     } catch (error) {
-      console.log("Error", error);
-
+      console.log("Error", error)
     }
   }
 
   const [destinationChain, setDestinationChain] = useState<number>(1)
-  const { tokens: sourceTokens, isLoading: loadingSourceTokens } = use1InchTokens(chainId)
-  const { tokens: destTokens, isLoading: loadingDestTokens } = use1InchTokens(destinationChain)
 
-  const handle1InchSwap = async () => {
-    if (!block.fromToken || !block.toToken || !block.amount) return
-
-    const sourceToken = sourceTokens?.find(t => t.symbol === block.fromToken)
-    const destToken = destTokens?.find(t => t.symbol === block.toToken)
-
-    try {
-      const swapData = {
-        fromToken: sourceToken?.address,
-        toToken: destToken?.address,
-        amount: block.amount,
-        fromChainId: chainId,
-        toChainId: destinationChain,
-        slippage: 1 // 1% default slippage
-      }
-
-      // Call your API endpoint that handles 1inch cross-chain swap
-      const response = await fetch('/api/1inch-cross-chain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(swapData)
-      })
-
-      const result = await response.json()
-      // Handle the response...
-    } catch (error) {
-      console.error('1inch cross-chain swap error:', error)
-      throw error
-    }
+  const handleKlasterSwap = async () => {
+    if (!activeAccount) return
+    const result = await crossChainMint({ activeAccount })
+    console.log("Result >>>>", result)
   }
 
   return (
@@ -233,8 +214,8 @@ const SwapBlock = () => {
                 if (fetchedTokens) {
                   updateBlockField(block.id, {
                     fromToken:
-                      fetchedTokens.find((token) => token.name === value)?.name ||
-                      "",
+                      fetchedTokens.find((token) => token.name === value)
+                        ?.name || "",
                   })
                 }
               }}
@@ -293,7 +274,7 @@ const SwapBlock = () => {
               </SelectTrigger>
               <SelectContent>
                 {fetchedTokens
-                  .filter(token => token.name !== block.fromToken)
+                  .filter((token) => token.name !== block.fromToken)
                   .map((token) => (
                     <SelectItem key={token.address} value={token.name}>
                       <div className="flex flex-row gap-2">
@@ -311,7 +292,10 @@ const SwapBlock = () => {
           </div>
           <div className="flex-3">
             {block.fromToken && block.toToken && (
-              <TokenOutput fromToken={block.fromToken} toToken={block.toToken} />
+              <TokenOutput
+                fromToken={block.fromToken}
+                toToken={block.toToken}
+              />
             )}
           </div>
         </div>
