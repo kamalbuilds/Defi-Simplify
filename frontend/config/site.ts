@@ -1,7 +1,7 @@
 export type SiteConfig = typeof siteConfig
 
 export const siteConfig = {
-  name: "TradeX",
+  name: "Simplify Defi",
   description:
     "CrossChain DEX Aggregator & Strategy Builder",
   mainNav: [

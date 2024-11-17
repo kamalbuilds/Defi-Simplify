@@ -1,7 +1,7 @@
 import React, { useContext, useMemo, useState } from "react"
 import Image from "next/image"
 import { handleCheckApprove } from "@/helpers/checkApprove"
-import { crossChainMint } from "@/services/AbstractService"
+import { crossChainSwap } from "@/services/AbstractService"
 import { bscTokens } from "@pancakeswap/tokens"
 import { Contract, ethers } from "ethers"
 import { ArrowDownUp, Blocks } from "lucide-react"
@@ -183,7 +183,7 @@ const SwapBlock = () => {
 
   const handleKlasterSwap = async () => {
     if (!activeAccount) return
-    const result = await crossChainMint({ activeAccount })
+    const result = await crossChainSwap({ activeAccount })
     console.log("Result >>>>", result)
   }
 

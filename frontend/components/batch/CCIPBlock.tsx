@@ -22,6 +22,25 @@ const SUPPORTED_CHAINS = [
   { id: 100, name: "Gnosis", selector: "11155111" },
 ]
 
+
+const CCIP_SUPPORTED_TOKENS = {
+    Ethereum: [
+      { name: "LINK", address: "0x514910771AF9Ca656af840dff83E8264EcF986CA", image: "/link.png", decimals: 18 },
+      { name: "CCIP-BnM", address: "0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05", image: "/bnm.png", decimals: 18 },
+      { name: "CCIP-LnM", address: "0x466D489b6d36E7E3b824ef491C225F5830E81cC1", image: "/lnm.png", decimals: 18 }
+    ],
+    Base: [
+      { name: "LINK", address: "0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196", image: "/link.png", decimals: 18 },
+      { name: "CCIP-BnM", address: "0xbf9036529123DE264bFA0FC7362fE25B650D4B16", image: "/bnm.png", decimals: 18 },
+      { name: "CCIP-LnM", address: "0x73ed16c1a61b098fd6924CCE5cC6a9A30348D944", image: "/lnm.png", decimals: 18 }
+    ],
+    Gnosis: [
+      { name: "LINK", address: "0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2", image: "/link.png", decimals: 18 },
+      { name: "CCIP-BnM", address: "0xbf9036529123DE264bFA0FC7362fE25B650D4B16", image: "/bnm.png", decimals: 18 },
+      { name: "CCIP-LnM", address: "0x73ed16c1a61b098fd6924CCE5cC6a9A30348D944", image: "/lnm.png", decimals: 18 }
+    ]
+  }
+  
 const CCIPBlock = () => {
   const context = useContext(BlockContext)
   if (!context) {
@@ -35,20 +54,42 @@ const CCIPBlock = () => {
 
   const [destinationChain, setDestinationChain] = useState<string>("")
   const [message, setMessage] = useState<string>("")
+  const { sendMessage } = useCCIP()
 
-  const { sendMessage } = useCCIP();
   const currentChain = SUPPORTED_CHAINS.find(chain => chain.id === chainId)
   const availableDestinations = SUPPORTED_CHAINS.filter(chain => chain.id !== chainId)
+
+  // Function to switch networks
+  const switchNetwork = async (chainId: number) => {
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: `0x${chainId.toString(16)}` }],
+      });
+    } catch (error) {
+      console.error('Error switching network:', error);
+    }
+  };
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label>Source Chain</label>
-          <Select disabled value={currentChain?.id.toString()}>
+          <Select 
+            value={currentChain?.id.toString()}
+            onValueChange={(value) => switchNetwork(parseInt(value))}
+          >
             <SelectTrigger>
-              <SelectValue placeholder={currentChain?.name || "Select chain"} />
+              <SelectValue placeholder="Select chain" />
             </SelectTrigger>
+            <SelectContent>
+              {SUPPORTED_CHAINS.map((chain) => (
+                <SelectItem key={chain.id} value={chain.id.toString()}>
+                  {chain.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
 
@@ -85,8 +126,8 @@ const CCIPBlock = () => {
             <SelectValue placeholder="Select token" />
           </SelectTrigger>
           <SelectContent>
-            {tokens[currentChain?.name || "Ethereum Mainnet"]?.map((token) => (
-              <SelectItem key={token.address} value={token.name}>
+            {CCIP_SUPPORTED_TOKENS[currentChain?.name || "Ethereum"]?.map((token) => (
+              <SelectItem key={token.address} value={token.address}>
                 <div className="flex items-center gap-2">
                   <Image src={token.image} alt={token.name} width={24} height={24} />
                   {token.name}

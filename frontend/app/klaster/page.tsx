@@ -15,7 +15,7 @@ import { useAccount } from "wagmi"
 
 import { Button } from "../../components/ui/button"
 import {
-  crossChainMint,
+  crossChainSwap,
   initKlasterService,
 } from "../../services/AbstractService"
 
@@ -40,7 +40,7 @@ const KlasterPage = () => {
 
   const handleButton = async () => {
     if (!activeAccount) return
-    const result = await crossChainMint({ activeAccount })
+    const result = await crossChainSwap({ activeAccount })
     console.log("Result", result)
   }
 

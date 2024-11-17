@@ -51,7 +51,7 @@ export const HomeScreen = () => {
                         className="mx-auto max-w-[800px] text-center"
                     >
                         <h1 className="text-4xl font-bold tracking-tight md:text-[6rem]">
-                            <span className="animate-pulse bg-gradient-to-r from-purple-400 to-blue-600 bg-clip-text text-transparent"> TradeX</span>
+                            <span className="animate-pulse bg-gradient-to-r from-purple-400 to-blue-600 bg-clip-text text-transparent"> Simplify Defi</span>
                         </h1>
                         <div className='my-12 flex flex-col gap-1'>
                             <p className="text-muted-foreground mx-auto max-w-[600px]  text-xl md:text-2xl">
@@ -225,14 +225,11 @@ export const HomeScreen = () => {
                     <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
                         <div className="flex items-center gap-2">
                             <Wallet className="size-5" />
-                            <span className="font-semibold">TradeX</span>
+                            <span className="font-semibold">Simpli</span>
                         </div>
                         <div className="flex gap-6">
-                            <Link href="https://twitter.com/abhish_3k" target='_blank' className="text-muted-foreground hover:text-foreground text-sm">
+                            <Link href="https://x.com/abhish_3k" target='_blank' className="text-muted-foreground hover:text-foreground text-sm">
                                 <Twitter />
-                            </Link>
-                            <Link href="https://github.com/kamalbuilds/BNB-Trading-Aggregator" target='_blank' className="text-muted-foreground hover:text-foreground text-sm">
-                                <Github />
                             </Link>
                         </div>
                     </div>
