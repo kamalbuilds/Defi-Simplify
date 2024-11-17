@@ -60,7 +60,8 @@ const defiActions = [
   "Squid Router",
   "CoW Swap",
   "CCIP Transfer",
-  "Lifi Swap"
+  "Lifi Swap",
+  "Unified Bridge"
 ]
 
 const BlockContext = createContext<

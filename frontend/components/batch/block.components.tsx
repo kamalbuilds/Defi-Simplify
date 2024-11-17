@@ -10,6 +10,7 @@ import Lifi from "./Lifi"
 import SquidBlock from "./SquidBlock"
 import SwapBlock from "./SwapBlock"
 import { RemoveLiquidityBlock } from "./removeliquidityblock"
+import UnifiedBridge from "./UnifiedBridge"
 
 export const BlockContext = React.createContext<BlockContextType | undefined>(
   undefined
@@ -36,6 +37,7 @@ const BlockComponent: FC<BlockContextType> = ({
       {block.action === "CoW Swap" && <CowSwapBlock />}
       {block.action === "CCIP Transfer" && <CCIPBlock />}
       {block.action === "Lifi Swap" && <Lifi />}
+      {block.action === "Unified Bridge" && <UnifiedBridge />}
     </BlockContext.Provider>
   )
 }
